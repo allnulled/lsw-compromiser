@@ -11,9 +11,29 @@
   }
 })(function () {
 
-  Promise.prototype.chain = function (nextPromise) {
-    return this.then(() => nextPromise);
-  };
+  Promise_extensions: {
+    globalThis.Promise = class TrackablePromise extends Promise {
+      constructor(executor) {
+        super((resolve, reject) => {
+          executor(
+            (value) => {
+              this.state = "fulfilled";
+              resolve(value);
+            },
+            (reason) => {
+              this.state = "rejected";
+              reject(reason);
+            }
+          )
+        });
+        this.state = "pending";
+      }
+    };
+
+    globalThis.Promise.prototype.chain = function (nextPromise) {
+      return this.then(() => nextPromise);
+    };
+  }
 
   class PromiseMap {
 
